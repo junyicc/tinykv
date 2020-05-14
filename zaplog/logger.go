@@ -1,6 +1,7 @@
 package zaplog
 
 import (
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,42 +16,51 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-// logger is a global Logger
-var logger *zap.Logger = newLogger()
+type zapLogger struct {
+	logger *zap.Logger
+	w      io.Writer
+}
+
+// zaplogger is a global Logger
+var zaplogger *zapLogger = newLogger()
 
 func Debug(msg string, fields ...zap.Field) {
-	logger.Debug(msg, fields...)
+	zaplogger.logger.Debug(msg, fields...)
 }
 
 func Info(msg string, fields ...zap.Field) {
-	logger.Info(msg, fields...)
+	zaplogger.logger.Info(msg, fields...)
 }
 
 func Warn(msg string, fields ...zap.Field) {
-	logger.Warn(msg, fields...)
+	zaplogger.logger.Warn(msg, fields...)
 }
 
 func Error(msg string, fields ...zap.Field) {
-	logger.Error(msg, fields...)
+	zaplogger.logger.Error(msg, fields...)
 }
 
 func DPanic(msg string, fields ...zap.Field) {
-	logger.DPanic(msg, fields...)
+	zaplogger.logger.DPanic(msg, fields...)
 }
 
 func Panic(msg string, fields ...zap.Field) {
-	logger.Panic(msg, fields...)
+	zaplogger.logger.Panic(msg, fields...)
 }
 
 func Fatal(msg string, fields ...zap.Field) {
-	logger.Fatal(msg, fields...)
+	zaplogger.logger.Fatal(msg, fields...)
 }
 
 func Flush() error {
-	return logger.Sync()
+	return zaplogger.logger.Sync()
 }
 
-func newLogger() *zap.Logger {
+func Writer() io.Writer {
+	return zaplogger.w
+}
+
+func newLogger() *zapLogger {
 	// print all level log
 	allPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.DebugLevel
@@ -84,8 +94,12 @@ func newLogger() *zap.Logger {
 		zapcore.NewCore(consoleEncoder, consoleWriter, allPriority),
 	)
 
-	Logger := zap.New(core, zap.AddCaller())
-	Logger.Info("init Logger successfully")
+	w := io.MultiWriter(fileWriter, consoleWriter)
+	zaplogger := &zapLogger{
+		logger: zap.New(core, zap.AddCaller()),
+		w:      w,
+	}
+	zaplogger.logger.Info("init logger successfully")
 
-	return Logger
+	return zaplogger
 }
