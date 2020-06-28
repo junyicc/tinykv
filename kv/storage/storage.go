@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"tinykv/kv/pkg/engine_util"
+	"tinykv/kv/storage/engine"
 	"tinykv/proto/kvrpcpb"
 )
 
@@ -17,6 +17,6 @@ type Storage interface {
 type StorageReader interface {
 	// When the key doesn't exist, return nil for the value
 	GetCF(cf string, key []byte) ([]byte, error)
-	IterCF(cf string) engine_util.DBIterator
+	IterCF(cf string) engine.DBIterator
 	Close()
 }

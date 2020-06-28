@@ -3,27 +3,38 @@ package standalone_storage
 import (
 	"tinykv/kv/config"
 	"tinykv/kv/storage"
+	"tinykv/kv/storage/engine"
 	"tinykv/proto/kvrpcpb"
 )
 
-type StandaloneStorage struct{}
+// StandaloneStorage stores data locally
+type StandaloneStorage struct {
+	engine *engine.Engines
+}
 
 func NewStandaloneStorage(conf *config.Config) *StandaloneStorage {
+	return &StandaloneStorage{
+		engine: engine.NewEngines(engine.CreateDB("", conf), nil, conf.DBPath, ""),
+	}
+}
+
+func (ss *StandaloneStorage) Start() error {
 	return nil
 }
 
-func (StandaloneStorage) Start() error {
-	panic("implement me")
+func (ss *StandaloneStorage) Stop() error {
+	return ss.engine.Close()
 }
 
-func (StandaloneStorage) Stop() error {
-	panic("implement me")
+func (ss *StandaloneStorage) Write(ctx *kvrpcpb.Context, batch []storage.Modify) error {
+	var writeBatch engine.WriteBatch
+	for _, m := range batch {
+		writeBatch.SetCF(engine.CfDefault, m.Key(), m.Value())
+	}
+	return ss.engine.WriteKV(&writeBatch)
 }
 
-func (StandaloneStorage) Write(ctx *kvrpcpb.Context, batch []storage.Modify) error {
-	panic("implement me")
-}
-
-func (StandaloneStorage) Reader(ctx *kvrpcpb.Context) (storage.StorageReader, error) {
-	panic("implement me")
+func (ss *StandaloneStorage) Reader(ctx *kvrpcpb.Context) (storage.StorageReader, error) {
+	txn := ss.engine.Kv.NewTransaction(false)
+	return NewStandaloneReader(txn), nil
 }

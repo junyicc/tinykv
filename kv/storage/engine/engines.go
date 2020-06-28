@@ -1,15 +1,29 @@
-package engine_util
+package engine
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"tinykv/kv/config"
-	"tinykv/zaplog"
-
-	"go.uber.org/zap"
 
 	"github.com/Connor1996/badger"
 )
+
+/*
+An engine is a low-level system for storing key/value pairs locally (without distribution or any transaction support,
+etc.). This package contains code for interacting with such engines.
+
+CF means 'column family'. A good description of column families is given in https://github.com/facebook/rocksdb/wiki/Column-Families
+(specifically for RocksDB, but the general concepts are universal). In short, a column family is a key namespace.
+Multiple column families are usually implemented as almost separate databases. Importantly each column family can be
+configured separately. Writes can be made atomic across column families, which cannot be done for separate databases.
+
+engine includes the following packages:
+
+* engines: a data structure for keeping engines required by unistore.
+*
+* cf_iterator: code to iterate over a whole column family in badger.
+*/
 
 // Engines keeps references to and data for the engines used by unistore.
 // All engines are badger key/value databases.
@@ -74,11 +88,11 @@ func CreateDB(subPath string, conf *config.Config) *badger.DB {
 	opts.Dir = filepath.Join(conf.DBPath, subPath)
 	opts.ValueDir = opts.Dir
 	if err := os.MkdirAll(opts.Dir, os.ModePerm); err != nil {
-		zaplog.Fatal("make dir", zap.String("dir", opts.Dir), zap.Error(err))
+		log.Fatal(err)
 	}
 	db, err := badger.Open(opts)
 	if err != nil {
-		zaplog.Fatal("open badger db", zap.Error(err))
+		log.Fatal(err)
 	}
 	return db
 }

@@ -1,10 +1,10 @@
-package engine_util
+package engine
 
 import (
 	"bytes"
 
 	"github.com/Connor1996/badger"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func KeyWithCF(cf string, key []byte) []byte {

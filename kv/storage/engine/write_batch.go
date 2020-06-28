@@ -1,11 +1,12 @@
-package engine_util
+package engine
 
 import (
 	"github.com/Connor1996/badger"
-	"github.com/golang/protobuf/proto"
 	"github.com/pingcap/errors"
+	"google.golang.org/protobuf/proto"
 )
 
+// WriteBatch batch writes into a single, atomic 'transaction'.
 type WriteBatch struct {
 	entries       []*badger.Entry
 	size          int

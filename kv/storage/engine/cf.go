@@ -1,8 +1,8 @@
-package engine_util
+package engine
 
-import (
-	"github.com/Connor1996/badger"
-)
+import "github.com/Connor1996/badger"
+
+// cf_iterator: code to iterate over a whole column family in badger.
 
 type CFItem struct {
 	item      *badger.Item
